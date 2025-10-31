@@ -21,6 +21,14 @@ struct ContentView: View {
                 Label("History", systemImage: "clock.arrow.circlepath")
             }
             .tag(1)
+            
+            NavigationStack {
+                APIQuotesView()
+            }
+            .tabItem {
+                Label("Discover", systemImage: "globe")
+            }
+            .tag(2)
         }
     }
 }
