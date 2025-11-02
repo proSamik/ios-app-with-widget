@@ -5,7 +5,7 @@ import Combine
 @MainActor
 class QuoteAPIService: ObservableObject {
     
-    private let apiKey = "API_KEY"
+    private let apiKey = "efyrmdWjD181odJrbFykvw==F8y5iDSCDtlGAvbp"
     private let baseURL = "https://api.api-ninjas.com"
     
     @Published var quotes: [APIQuote] = []

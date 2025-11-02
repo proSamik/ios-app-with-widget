@@ -11,7 +11,7 @@ struct QuoteEntry: TimelineEntry {
 }
 
 // MARK: - Timeline Provider
-struct QuoteProvider: TimelineProvider {
+struct QuoteProvider: @MainActor TimelineProvider {
     typealias Entry = QuoteEntry
     
     // Placeholder for widget gallery
