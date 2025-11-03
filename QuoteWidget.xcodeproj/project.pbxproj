@@ -10,6 +10,12 @@
 		C1BB35CF2EB29B4A004CDAA5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1BB35CE2EB29B4A004CDAA5 /* WidgetKit.framework */; };
 		C1BB35D12EB29B4A004CDAA5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1BB35D02EB29B4A004CDAA5 /* SwiftUI.framework */; };
 		C1BB35DE2EB29B50004CDAA5 /* QuoteWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C1BB35CC2EB29B4A004CDAA5 /* QuoteWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C1DFD6AB2EB7F0DE00CDCC77 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6AA2EB7F0DE00CDCC77 /* Auth */; };
+		C1DFD6AD2EB7F0DE00CDCC77 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6AC2EB7F0DE00CDCC77 /* Functions */; };
+		C1DFD6AF2EB7F0DE00CDCC77 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6AE2EB7F0DE00CDCC77 /* PostgREST */; };
+		C1DFD6B12EB7F0DE00CDCC77 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6B02EB7F0DE00CDCC77 /* Realtime */; };
+		C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6B22EB7F0DE00CDCC77 /* Storage */; };
+		C1DFD6B52EB7F0DE00CDCC77 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6B42EB7F0DE00CDCC77 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,12 +67,20 @@
 			);
 			target = C1BB35CB2EB29B4A004CDAA5 /* QuoteWidgetExtensionExtension */;
 		};
+		C1DFD6BB2EB7F1C600CDCC77 /* Exceptions for "QuoteWidget" folder in "QuoteWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C1BB35AC2EB2992B004CDAA5 /* QuoteWidget */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C1BB35AF2EB2992B004CDAA5 /* QuoteWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				C1DFD6BB2EB7F1C600CDCC77 /* Exceptions for "QuoteWidget" folder in "QuoteWidget" target */,
 				C1BB35E62EB29CAD004CDAA5 /* Exceptions for "QuoteWidget" folder in "QuoteWidgetExtensionExtension" target */,
 			);
 			path = QuoteWidget;
@@ -87,6 +101,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C1DFD6AF2EB7F0DE00CDCC77 /* PostgREST in Frameworks */,
+				C1DFD6AD2EB7F0DE00CDCC77 /* Functions in Frameworks */,
+				C1DFD6B52EB7F0DE00CDCC77 /* Supabase in Frameworks */,
+				C1DFD6AB2EB7F0DE00CDCC77 /* Auth in Frameworks */,
+				C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */,
+				C1DFD6B12EB7F0DE00CDCC77 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -153,6 +173,12 @@
 			);
 			name = QuoteWidget;
 			packageProductDependencies = (
+				C1DFD6AA2EB7F0DE00CDCC77 /* Auth */,
+				C1DFD6AC2EB7F0DE00CDCC77 /* Functions */,
+				C1DFD6AE2EB7F0DE00CDCC77 /* PostgREST */,
+				C1DFD6B02EB7F0DE00CDCC77 /* Realtime */,
+				C1DFD6B22EB7F0DE00CDCC77 /* Storage */,
+				C1DFD6B42EB7F0DE00CDCC77 /* Supabase */,
 			);
 			productName = QuoteWidget;
 			productReference = C1BB35AD2EB2992B004CDAA5 /* QuoteWidget.app */;
@@ -207,6 +233,9 @@
 			);
 			mainGroup = C1BB35A42EB2992B004CDAA5;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C1BB35AE2EB2992B004CDAA5 /* Products */;
 			projectDirPath = "";
@@ -393,11 +422,13 @@
 				DEVELOPMENT_TEAM = 89XPZTS47Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuoteWidget/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -426,11 +457,13 @@
 				DEVELOPMENT_TEAM = 89XPZTS47Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuoteWidget/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -461,6 +494,7 @@
 				INFOPLIST_FILE = QuoteWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = QuoteWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -492,6 +526,7 @@
 				INFOPLIST_FILE = QuoteWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = QuoteWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -541,6 +576,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C1DFD6AA2EB7F0DE00CDCC77 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		C1DFD6AC2EB7F0DE00CDCC77 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		C1DFD6AE2EB7F0DE00CDCC77 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		C1DFD6B02EB7F0DE00CDCC77 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		C1DFD6B22EB7F0DE00CDCC77 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		C1DFD6B42EB7F0DE00CDCC77 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C1BB35A52EB2992B004CDAA5 /* Project object */;
 }

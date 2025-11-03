@@ -29,6 +29,14 @@ struct ContentView: View {
                 Label("Discover", systemImage: "globe")
             }
             .tag(2)
+            
+            NavigationStack {
+                AppView()
+            }
+            .tabItem {
+                Label("Auth", systemImage: "lock")
+            }
+            .tag(3)
         }
     }
 }
