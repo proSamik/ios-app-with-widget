@@ -5,6 +5,9 @@ struct ProfileView: View {
     @State var isLoading = false
     @State var profile: UserProfile?
     @State var errorMessage: String?
+    @State var isEditingName = false
+    @State var editedName = ""
+    @State var isSaving = false
 
     var body: some View {
         NavigationStack {
