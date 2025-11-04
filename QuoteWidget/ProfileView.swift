@@ -85,12 +85,9 @@ struct ProfileView: View {
         errorMessage = nil
 
         do {
-            // Get the current user
-            guard let user = try await supabase.auth.session.user else {
-                errorMessage = "No user logged in"
-                isLoading = false
-                return
-            }
+            // Get the current session
+            let session = try await supabase.auth.session
+            let user = session.user
 
             // Fetch profile from Supabase
             let response: UserProfile = try await supabase

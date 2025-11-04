@@ -784,3 +784,95 @@ Now that you have a working app with widget, explore these topics:
 **Navigation**: TabView for app structure, separate views for clarity[16][15]
 
 You've now built a complete iOS app with SwiftData persistence, a home screen widget, and reusable components - all as a complete beginner! This foundation will help you tackle more complex iOS development projects.
+
+
+
+DB Command
+```
+  -- Create profiles table (extends auth.users)
+  CREATE TABLE profiles (
+    id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+    name TEXT,
+    profile_image_url TEXT,
+    email TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
+  NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
+  NULL
+  );
+
+  -- Create quotes table for user-specific quotes
+  CREATE TABLE quotes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+    text TEXT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
+  NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
+  NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
+  NULL
+  );
+
+  -- Enable Row Level Security (RLS)
+  ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+  -- Create policies for profiles table
+  CREATE POLICY "Users can view own profile" ON profiles
+    FOR SELECT USING (auth.uid() = id);
+
+  CREATE POLICY "Users can update own profile" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
+
+  CREATE POLICY "Users can insert own profile" ON profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
+  -- Create policies for quotes table
+  CREATE POLICY "Users can view own quotes" ON quotes
+    FOR SELECT USING (auth.uid() = user_id);
+
+  CREATE POLICY "Users can insert own quotes" ON quotes
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+  CREATE POLICY "Users can update own quotes" ON quotes
+    FOR UPDATE USING (auth.uid() = user_id);
+
+  CREATE POLICY "Users can delete own quotes" ON quotes
+    FOR DELETE USING (auth.uid() = user_id);
+
+  -- Create function to handle new user profile creation
+  CREATE OR REPLACE FUNCTION public.handle_new_user()
+  RETURNS TRIGGER AS $$
+  BEGIN
+    INSERT INTO public.profiles (id, email, name)
+    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name');
+    RETURN NEW;
+  END;
+  $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+  -- Create trigger to automatically create profile on user signup
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+  -- Create function to update updated_at timestamp
+  CREATE OR REPLACE FUNCTION public.handle_updated_at()
+  RETURNS TRIGGER AS $$
+  BEGIN
+    NEW.updated_at = TIMEZONE('utc', NOW());
+    RETURN NEW;
+  END;
+  $$ LANGUAGE plpgsql;
+
+  -- Create triggers for updated_at
+  CREATE TRIGGER profiles_updated_at
+    BEFORE UPDATE ON profiles
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+
+  CREATE TRIGGER quotes_updated_at
+    BEFORE UPDATE ON quotes
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+
+
+```

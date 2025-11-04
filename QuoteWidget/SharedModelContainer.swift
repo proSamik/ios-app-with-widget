@@ -9,7 +9,7 @@ class SharedModelContainer {
         let schema = Schema([Quote.self])
         let modelConfiguration = ModelConfiguration(
             schema: schema,
-            groupContainer: .identifier("group.com.prosamik.QuoteWidget") // Use YOUR App Group
+            groupContainer: .identifier("group.com.prosamik.quotewidgetapp")
         )
         
         do {
