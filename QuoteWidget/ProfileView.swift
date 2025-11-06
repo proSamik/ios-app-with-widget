@@ -37,17 +37,54 @@ struct ProfileView: View {
                             .frame(width: 120, height: 120)
                     }
 
-                    // Name
-                    if let name = profile?.name, !name.isEmpty {
-                        Text(name)
-                            .font(.title)
-                            .fontWeight(.bold)
-                    } else {
-                        // Placeholder for name
-                        Text("No Name Set")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.gray)
+                    // Name editing section
+                    VStack {
+                        if isEditingName {
+                            HStack {
+                                TextField("Enter your name", text: $editedName)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .disabled(isSaving)
+                                
+                                Button("Save") {
+                                    Task {
+                                        await saveName()
+                                    }
+                                }
+                                .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                                
+                                Button("Cancel") {
+                                    isEditingName = false
+                                    editedName = profile?.name ?? ""
+                                }
+                                .disabled(isSaving)
+                            }
+                            
+                            if isSaving {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            }
+                        } else {
+                            HStack {
+                                if let name = profile?.name, !name.isEmpty {
+                                    Text(name)
+                                        .font(.title)
+                                        .fontWeight(.bold)
+                                } else {
+                                    Text("No Name Set")
+                                        .font(.title)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Button(action: {
+                                    editedName = profile?.name ?? ""
+                                    isEditingName = true
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
                     }
 
                     // Email
@@ -81,6 +118,37 @@ struct ProfileView: View {
                 await fetchProfile()
             }
         }
+    }
+
+    func saveName() async {
+        isSaving = true
+        errorMessage = nil
+        
+        let trimmedName = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        do {
+            let session = try await supabase.auth.session
+            let user = session.user
+            
+            // Update profile in Supabase
+            try await supabase
+                .from("profiles")
+                .update(["name": trimmedName])
+                .eq("id", value: user.id.uuidString)
+                .execute()
+            
+            // Update local profile only if save was successful
+            var updatedProfile = profile
+            updatedProfile?.name = trimmedName
+            profile = updatedProfile
+            
+            isEditingName = false
+        } catch {
+            errorMessage = "Failed to update name: \(error.localizedDescription)"
+            print("Name update error: \(error)")
+        }
+        
+        isSaving = false
     }
 
     func fetchProfile() async {

@@ -4,6 +4,7 @@ import WidgetKit
 
 struct QuoteEditorView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var syncService: QuoteSyncService
     @Query(sort: \Quote.timestamp, order: .reverse) private var quotes: [Quote]
     
     @State private var quoteText: String = ""
@@ -58,19 +59,16 @@ struct QuoteEditorView: View {
     func saveQuote() {
         guard !quoteText.isEmpty else { return }
         
-        let newQuote = Quote(text: quoteText, timestamp: Date())
-        modelContext.insert(newQuote)
-        
-        do {
-            try modelContext.save()
+        Task {
+            await syncService.addQuote(quoteText)
             
             // Reload widget
             WidgetCenter.shared.reloadAllTimelines()
             
-            quoteText = ""
-            showingSavedAlert = true
-        } catch {
-            print("Error saving quote: \(error)")
+            await MainActor.run {
+                quoteText = ""
+                showingSavedAlert = true
+            }
         }
     }
 

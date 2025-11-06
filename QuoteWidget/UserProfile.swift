@@ -2,9 +2,9 @@ import Foundation
 
 struct UserProfile: Codable, Identifiable {
     let id: UUID
-    let name: String?
-    let profileImageUrl: String?
-    let email: String?
+    var name: String?
+    var profileImageUrl: String?
+    var email: String?
     let createdAt: Date?
     let updatedAt: Date?
 

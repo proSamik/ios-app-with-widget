@@ -3,6 +3,7 @@ import SwiftData
 
 struct QuoteHistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var syncService: QuoteSyncService
     @Query(sort: \Quote.timestamp, order: .reverse) private var quotes: [Quote]
     
     var body: some View {
@@ -30,13 +31,38 @@ struct QuoteHistoryView: View {
         }
         .navigationTitle("Quote History")
         .toolbar {
-            EditButton()
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Refresh") {
+                    Task {
+                        await syncService.syncQuotesOnAppLaunch()
+                    }
+                }
+                .disabled(syncService.isLoading)
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                EditButton()
+            }
+        }
+        .overlay {
+            if syncService.isLoading {
+                VStack {
+                    ProgressView("Syncing...")
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                }
+            }
         }
     }
     
     func deleteQuotes(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(quotes[index])
+            let quote = quotes[index]
+            Task {
+                await syncService.deleteQuote(quote)
+            }
         }
     }
 }
