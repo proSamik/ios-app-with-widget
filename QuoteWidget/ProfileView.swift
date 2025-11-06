@@ -127,8 +127,7 @@ struct ProfileView: View {
         let trimmedName = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
         
         do {
-            let session = try await supabase.auth.session
-            let user = session.user
+            let user = try await supabase.auth.user()
             
             // Update profile in Supabase
             try await supabase
@@ -156,25 +155,59 @@ struct ProfileView: View {
         errorMessage = nil
 
         do {
-            // Get the current session
-            let session = try await supabase.auth.session
-            let user = session.user
+            // Get the current user
+            let user = try await supabase.auth.user()
 
             // Fetch profile from Supabase
-            let response: UserProfile = try await supabase
+            let response: [UserProfile] = try await supabase
                 .from("profiles")
                 .select()
                 .eq("id", value: user.id.uuidString)
-                .single()
                 .execute()
                 .value
 
-            profile = response
+            if let existingProfile = response.first {
+                // Profile exists, use it
+                profile = existingProfile
+            } else {
+                // Profile doesn't exist, create one for this user
+                await createProfile(for: user)
+            }
         } catch {
             errorMessage = "Failed to load profile: \(error.localizedDescription)"
             print("Profile fetch error: \(error)")
         }
 
         isLoading = false
+    }
+    
+    func createProfile(for user: User) async {
+        do {
+            let newProfile = ProfileInsert(
+                id: user.id.uuidString,
+                email: user.email ?? "",
+                name: nil,
+                profileImageUrl: nil
+            )
+            
+            try await supabase
+                .from("profiles")
+                .insert(newProfile)
+                .execute()
+            
+            // Fetch the newly created profile
+            let response: [UserProfile] = try await supabase
+                .from("profiles")
+                .select()
+                .eq("id", value: user.id.uuidString)
+                .execute()
+                .value
+            
+            profile = response.first
+            
+        } catch {
+            errorMessage = "Failed to create profile: \(error.localizedDescription)"
+            print("Profile creation error: \(error)")
+        }
     }
 }

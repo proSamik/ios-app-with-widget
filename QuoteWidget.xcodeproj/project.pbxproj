@@ -17,6 +17,7 @@
 		C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6B22EB7F0DE00CDCC77 /* Storage */; };
 		C1DFD6B52EB7F0DE00CDCC77 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = C1DFD6B42EB7F0DE00CDCC77 /* Supabase */; };
 		C1FEA5062EBD3D4E0093A0D5 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = C1FEA5052EBD3D4E0093A0D5 /* GoogleSignIn */; };
+		C1FEA5082EBD485B0093A0D5 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C1FEA5072EBD485B0093A0D5 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +106,7 @@
 				C1DFD6AF2EB7F0DE00CDCC77 /* PostgREST in Frameworks */,
 				C1DFD6AD2EB7F0DE00CDCC77 /* Functions in Frameworks */,
 				C1DFD6B52EB7F0DE00CDCC77 /* Supabase in Frameworks */,
+				C1FEA5082EBD485B0093A0D5 /* GoogleSignInSwift in Frameworks */,
 				C1DFD6AB2EB7F0DE00CDCC77 /* Auth in Frameworks */,
 				C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */,
 				C1DFD6B12EB7F0DE00CDCC77 /* Realtime in Frameworks */,
@@ -182,6 +184,7 @@
 				C1DFD6B22EB7F0DE00CDCC77 /* Storage */,
 				C1DFD6B42EB7F0DE00CDCC77 /* Supabase */,
 				C1FEA5052EBD3D4E0093A0D5 /* GoogleSignIn */,
+				C1FEA5072EBD485B0093A0D5 /* GoogleSignInSwift */,
 			);
 			productName = QuoteWidget;
 			productReference = C1BB35AD2EB2992B004CDAA5 /* QuoteWidget.app */;
@@ -217,7 +220,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					C1BB35AC2EB2992B004CDAA5 = {
 						CreatedOnToolsVersion = 26.0.1;
@@ -353,6 +356,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -410,6 +414,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -639,6 +644,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C1FEA5042EBD3CDE0093A0D5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		C1FEA5072EBD485B0093A0D5 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1FEA5042EBD3CDE0093A0D5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
