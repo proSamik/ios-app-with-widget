@@ -117,6 +117,14 @@ struct ProfileView: View {
             .task {
                 await fetchProfile()
             }
+            .refreshable {
+                await fetchProfile()
+            }
+            .onAppear {
+                Task {
+                    await fetchProfile()
+                }
+            }
         }
     }
 
@@ -170,8 +178,17 @@ struct ProfileView: View {
                 // Profile exists, use it
                 profile = existingProfile
             } else {
-                // Profile doesn't exist, create one for this user
-                await createProfile(for: user)
+                // Profile should be created by database trigger, wait a bit and retry
+                try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second
+                
+                let retryResponse: [UserProfile] = try await supabase
+                    .from("profiles")
+                    .select()
+                    .eq("id", value: user.id.uuidString)
+                    .execute()
+                    .value
+                
+                profile = retryResponse.first
             }
         } catch {
             errorMessage = "Failed to load profile: \(error.localizedDescription)"
@@ -179,35 +196,5 @@ struct ProfileView: View {
         }
 
         isLoading = false
-    }
-    
-    func createProfile(for user: User) async {
-        do {
-            let newProfile = ProfileInsert(
-                id: user.id.uuidString,
-                email: user.email ?? "",
-                name: nil,
-                profileImageUrl: nil
-            )
-            
-            try await supabase
-                .from("profiles")
-                .insert(newProfile)
-                .execute()
-            
-            // Fetch the newly created profile
-            let response: [UserProfile] = try await supabase
-                .from("profiles")
-                .select()
-                .eq("id", value: user.id.uuidString)
-                .execute()
-                .value
-            
-            profile = response.first
-            
-        } catch {
-            errorMessage = "Failed to create profile: \(error.localizedDescription)"
-            print("Profile creation error: \(error)")
-        }
     }
 }

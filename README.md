@@ -787,92 +787,126 @@ You've now built a complete iOS app with SwiftData persistence, a home screen wi
 
 
 
-DB Command
+## Supabase Database Setup
+
+### Step 1: Clean up existing data (run this first if you have existing setup)
+
+```sql
+-- Step 1: Drop functions first (they may depend on triggers)
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_updated_at() CASCADE;
+
+-- Step 2: Drop triggers (should work now that functions are gone)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Step 3: Drop tables if they exist (this will auto-drop policies)
+DROP TABLE IF EXISTS quotes CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
+-- Optional: Clean up auth.users if you want to start completely fresh
+-- WARNING: This will delete all user accounts!
+-- DELETE FROM auth.users;
+
+-- Note: If you still get "trigger already exists" error, run this to see what's there:
+-- SELECT * FROM information_schema.triggers WHERE event_object_table = 'users' AND trigger_schema = 'auth';
 ```
-  -- Create profiles table (extends auth.users)
-  CREATE TABLE profiles (
-    id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-    name TEXT,
-    profile_image_url TEXT,
-    email TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
-  NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
-  NULL
+
+### Step 2: Create fresh database setup
+
+Copy and paste these SQL commands in your Supabase SQL Editor:
+
+```sql
+-- Create profiles table (extends auth.users)
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  name TEXT,
+  profile_image_url TEXT,
+  email TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+-- Create quotes table for user-specific quotes
+CREATE TABLE quotes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  text TEXT NOT NULL,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for profiles table
+CREATE POLICY "Users can view own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Create policies for quotes table
+CREATE POLICY "Users can view own quotes" ON quotes
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own quotes" ON quotes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own quotes" ON quotes
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own quotes" ON quotes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Create function to handle new user profile creation with name and profile image
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, name, profile_image_url)
+  VALUES (
+    NEW.id, 
+    NEW.email, 
+    NEW.raw_user_meta_data->>'name',
+    NEW.raw_user_meta_data->>'profile_image_url'
   );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-  -- Create quotes table for user-specific quotes
-  CREATE TABLE quotes (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
-    text TEXT NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
-  NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
-  NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT
-  NULL
-  );
+-- Create trigger to automatically create profile on user signup
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
-  -- Enable Row Level Security (RLS)
-  ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-  ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = TIMEZONE('utc', NOW());
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-  -- Create policies for profiles table
-  CREATE POLICY "Users can view own profile" ON profiles
-    FOR SELECT USING (auth.uid() = id);
+-- Create triggers for updated_at
+CREATE TRIGGER profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 
-  CREATE POLICY "Users can update own profile" ON profiles
-    FOR UPDATE USING (auth.uid() = id);
-
-  CREATE POLICY "Users can insert own profile" ON profiles
-    FOR INSERT WITH CHECK (auth.uid() = id);
-
-  -- Create policies for quotes table
-  CREATE POLICY "Users can view own quotes" ON quotes
-    FOR SELECT USING (auth.uid() = user_id);
-
-  CREATE POLICY "Users can insert own quotes" ON quotes
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-  CREATE POLICY "Users can update own quotes" ON quotes
-    FOR UPDATE USING (auth.uid() = user_id);
-
-  CREATE POLICY "Users can delete own quotes" ON quotes
-    FOR DELETE USING (auth.uid() = user_id);
-
-  -- Create function to handle new user profile creation
-  CREATE OR REPLACE FUNCTION public.handle_new_user()
-  RETURNS TRIGGER AS $$
-  BEGIN
-    INSERT INTO public.profiles (id, email, name)
-    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name');
-    RETURN NEW;
-  END;
-  $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-  -- Create trigger to automatically create profile on user signup
-  CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
-
-  -- Create function to update updated_at timestamp
-  CREATE OR REPLACE FUNCTION public.handle_updated_at()
-  RETURNS TRIGGER AS $$
-  BEGIN
-    NEW.updated_at = TIMEZONE('utc', NOW());
-    RETURN NEW;
-  END;
-  $$ LANGUAGE plpgsql;
-
-  -- Create triggers for updated_at
-  CREATE TRIGGER profiles_updated_at
-    BEFORE UPDATE ON profiles
-    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
-
-  CREATE TRIGGER quotes_updated_at
-    BEFORE UPDATE ON quotes
-    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
-
-
+CREATE TRIGGER quotes_updated_at
+  BEFORE UPDATE ON quotes
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 ```
+
+## Authentication Setup
+
+The database trigger automatically creates user profiles with:
+- **Google Sign In**: Full name and profile image URL (always available)
+- **Apple Sign In**: Full name (only on first sign-in, then preserved for privacy)
+- **Email**: Always included from OAuth provider
+
+This ensures profiles are created immediately with proper data and no duplicate key errors.
