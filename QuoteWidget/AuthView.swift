@@ -2,6 +2,7 @@ import SwiftUI
 import AuthenticationServices
 import Supabase
 import GoogleSignIn
+import RevenueCat
 
 struct ProfileInsert: Codable {
     let id: String
@@ -32,6 +33,7 @@ struct AuthView: View {
     @State var user: User?
     @State var errorMessage: String?
     @State var isLoading = false
+    @EnvironmentObject var revenueCatManager: RevenueCatManager
     
     var body: some View {
         VStack(spacing: 20) {
@@ -107,6 +109,10 @@ struct AuthView: View {
                                 isSignedIn = false
                                 user = nil
                                 errorMessage = nil
+                                // Sign out from RevenueCat too
+                                await revenueCatManager.signOut()
+                                // Post sign-out notification
+                                NotificationCenter.default.post(name: .userDidSignOut, object: nil)
                             } catch {
                                 errorMessage = "Sign out failed: \(error.localizedDescription)"
                             }
@@ -149,25 +155,6 @@ struct AuthView: View {
                 return
             }
             
-            // Prepare metadata for Apple (only available on first sign-in)
-            var metadata: [String: AnyJSON] = [:]
-            if let fullName = credential.fullName {
-                var nameParts: [String] = []
-                if let givenName = fullName.givenName {
-                    nameParts.append(givenName)
-                }
-                if let middleName = fullName.middleName {
-                    nameParts.append(middleName)
-                }
-                if let familyName = fullName.familyName {
-                    nameParts.append(familyName)
-                }
-                let fullNameString = nameParts.joined(separator: " ")
-                if !fullNameString.isEmpty {
-                    metadata["name"] = AnyJSON.string(fullNameString)
-                }
-            }
-            
             try await supabase.auth.signInWithIdToken(
                 credentials: .init(
                     provider: .apple,
@@ -177,7 +164,6 @@ struct AuthView: View {
             
             // Update user profile with full name from Apple
             await updateAppleUserProfile(credential: credential)
-            
             
         } catch {
             errorMessage = "Sign in failed: \(error.localizedDescription)"
@@ -216,16 +202,6 @@ struct AuthView: View {
             
             let accessToken = result.user.accessToken.tokenString
             
-            // Prepare metadata for Google 
-            var metadata: [String: AnyJSON] = [:]
-            if let profile = result.user.profile {
-                metadata["name"] = AnyJSON.string(profile.name)
-                if profile.hasImage, let imageUrl = profile.imageURL(withDimension: 200) {
-                    metadata["profile_image_url"] = AnyJSON.string(imageUrl.absoluteString)
-                }
-            }
-            
-            // Supabase recommended approach
             try await supabase.auth.signInWithIdToken(
                 credentials: OpenIDConnectCredentials(
                     provider: .google,
@@ -236,7 +212,6 @@ struct AuthView: View {
             
             // Update user profile with data from Google
             await updateGoogleUserProfile(googleUser: result.user)
-            
             
         } catch {
             errorMessage = "Google sign in failed: \(error.localizedDescription)"
@@ -251,25 +226,27 @@ struct AuthView: View {
             user = currentUser
             isSignedIn = true
             errorMessage = nil
+            
+            // Post notification with user ID for ContentView to handle
+            NotificationCenter.default.post(
+                name: .userDidSignIn,
+                object: currentUser.id.uuidString
+            )
+            
         } catch {
             errorMessage = "Failed to get user: \(error.localizedDescription)"
         }
     }
     
-    // MARK: - Update User Profile Methods
     @MainActor
     private func updateAppleUserProfile(credential: ASAuthorizationAppleIDCredential) async {
         await handlePostSignIn()
-        
-        // Check if profile exists, create if needed
         await ensureProfileExists(credential: credential, googleUser: nil)
     }
     
     @MainActor
     private func updateGoogleUserProfile(googleUser: GIDGoogleUser) async {
         await handlePostSignIn()
-        
-        // Check if profile exists, create if needed  
         await ensureProfileExists(credential: nil, googleUser: googleUser)
     }
     
@@ -278,7 +255,6 @@ struct AuthView: View {
             let currentUser = try await supabase.auth.user()
             print("Checking profile for user: \(currentUser.id.uuidString)")
             
-            // Check if profile exists
             let existingProfiles: [UserProfile] = try await supabase
                 .from("profiles")
                 .select()
@@ -303,7 +279,6 @@ struct AuthView: View {
             var name: String? = nil
             var profileImageUrl: String? = nil
             
-            // Extract name from Apple
             if let credential = credential, let fullName = credential.fullName {
                 var nameParts: [String] = []
                 if let givenName = fullName.givenName {
@@ -321,15 +296,12 @@ struct AuthView: View {
                 }
             }
             
-            // Extract name and image from Google
             if let googleUser = googleUser, let profile = googleUser.profile {
                 name = profile.name
                 if profile.hasImage, let imageUrl = profile.imageURL(withDimension: 200) {
                     profileImageUrl = imageUrl.absoluteString
                 }
             }
-            
-            print("Creating profile with name: \(name ?? "nil"), image: \(profileImageUrl ?? "nil")")
             
             let newProfile = ProfileInsert(
                 id: user.id.uuidString,

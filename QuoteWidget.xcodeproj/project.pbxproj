@@ -9,9 +9,8 @@
 /* Begin PBXBuildFile section */
 		C16AF9582EBE842C006B7747 /* ReceiptParser in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF9572EBE842C006B7747 /* ReceiptParser */; };
 		C16AF95A2EBE842C006B7747 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF9592EBE842C006B7747 /* RevenueCat */; };
-		C16AF95C2EBE842C006B7747 /* RevenueCat_CustomEntitlementComputation in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF95B2EBE842C006B7747 /* RevenueCat_CustomEntitlementComputation */; };
-		C16AF95E2EBE842C006B7747 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF95D2EBE842C006B7747 /* RevenueCatUI */; };
 		C16AF9602EBE8482006B7747 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C16AF95F2EBE8482006B7747 /* StoreKit.framework */; };
+		C16AF96C2EBEA209006B7747 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF96B2EBEA209006B7747 /* RevenueCatUI */; };
 		C1BB35CF2EB29B4A004CDAA5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1BB35CE2EB29B4A004CDAA5 /* WidgetKit.framework */; };
 		C1BB35D12EB29B4A004CDAA5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1BB35D02EB29B4A004CDAA5 /* SwiftUI.framework */; };
 		C1BB35DE2EB29B50004CDAA5 /* QuoteWidgetExtensionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C1BB35CC2EB29B4A004CDAA5 /* QuoteWidgetExtensionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -117,9 +116,8 @@
 				C1FEA5082EBD485B0093A0D5 /* GoogleSignInSwift in Frameworks */,
 				C1DFD6AB2EB7F0DE00CDCC77 /* Auth in Frameworks */,
 				C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */,
-				C16AF95E2EBE842C006B7747 /* RevenueCatUI in Frameworks */,
+				C16AF96C2EBEA209006B7747 /* RevenueCatUI in Frameworks */,
 				C1DFD6B12EB7F0DE00CDCC77 /* Realtime in Frameworks */,
-				C16AF95C2EBE842C006B7747 /* RevenueCat_CustomEntitlementComputation in Frameworks */,
 				C16AF9602EBE8482006B7747 /* StoreKit.framework in Frameworks */,
 				C1FEA5062EBD3D4E0093A0D5 /* GoogleSignIn in Frameworks */,
 			);
@@ -199,8 +197,7 @@
 				C1FEA5072EBD485B0093A0D5 /* GoogleSignInSwift */,
 				C16AF9572EBE842C006B7747 /* ReceiptParser */,
 				C16AF9592EBE842C006B7747 /* RevenueCat */,
-				C16AF95B2EBE842C006B7747 /* RevenueCat_CustomEntitlementComputation */,
-				C16AF95D2EBE842C006B7747 /* RevenueCatUI */,
+				C16AF96B2EBEA209006B7747 /* RevenueCatUI */,
 			);
 			productName = QuoteWidget;
 			productReference = C1BB35AD2EB2992B004CDAA5 /* QuoteWidget.app */;
@@ -645,12 +642,7 @@
 			package = C11618782EBE418A00AA7EC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCat;
 		};
-		C16AF95B2EBE842C006B7747 /* RevenueCat_CustomEntitlementComputation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C11618782EBE418A00AA7EC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
-			productName = RevenueCat_CustomEntitlementComputation;
-		};
-		C16AF95D2EBE842C006B7747 /* RevenueCatUI */ = {
+		C16AF96B2EBEA209006B7747 /* RevenueCatUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C11618782EBE418A00AA7EC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCatUI;
