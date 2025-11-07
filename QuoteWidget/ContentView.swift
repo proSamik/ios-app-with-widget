@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Supabase
 
 extension Notification.Name {
     static let userDidSignIn = Notification.Name("userDidSignIn")
@@ -14,10 +15,21 @@ struct ContentView: View {
     @State private var syncService: QuoteSyncService?
     @State private var isAuthenticated = false
     @State private var isRevenueCatSetup = false
+    @State private var isCheckingAuth = true
     
     var body: some View {
         Group {
-            if !isAuthenticated {
+            if isCheckingAuth {
+                // Show loading while checking authentication state
+                VStack(spacing: 20) {
+                    ProgressView()
+                    Text("Loading...")
+                        .foregroundColor(.secondary)
+                }
+                .task {
+                    await checkInitialAuthState()
+                }
+            } else if !isAuthenticated {
                 // Show authentication first
                 AuthView()
                     .onReceive(NotificationCenter.default.publisher(for: .userDidSignIn)) { notification in
@@ -52,6 +64,29 @@ struct ContentView: View {
             isAuthenticated = false
             isRevenueCatSetup = false
         }
+    }
+    
+    @MainActor
+    private func checkInitialAuthState() async {
+        do {
+            // Check if user is already authenticated with Supabase
+            let currentUser = try await supabase.auth.user()
+            
+            // User is authenticated
+            isAuthenticated = true
+            print("✅ User already authenticated: \(currentUser.id.uuidString)")
+            
+            // Set up RevenueCat with the existing user ID
+            await revenueCatManager.setupWithUserID(currentUser.id.uuidString)
+            isRevenueCatSetup = true
+            
+        } catch {
+            // User is not authenticated
+            print("ℹ️ User not authenticated, showing auth screen")
+            isAuthenticated = false
+        }
+        
+        isCheckingAuth = false
     }
 }
 

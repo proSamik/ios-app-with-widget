@@ -13,7 +13,7 @@ class RevenueCatManager: NSObject, ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    private let entitlementID = "test_premium" // Your entitlement ID from dashboard
+    private let entitlementID = "plus" // Your entitlement ID from dashboard
     
     private override init() {
         super.init()
@@ -48,12 +48,18 @@ class RevenueCatManager: NSObject, ObservableObject {
             let customerInfo = try await Purchases.shared.customerInfo()
             self.customerInfo = customerInfo
             
+            // Debug: Print all available entitlements
+            print("🔍 Available entitlements:")
+            for (key, entitlement) in customerInfo.entitlements.all {
+                print("  - \(key): active=\(entitlement.isActive)")
+            }
+            
             // Check if user has the premium entitlement
             self.isSubscribed = customerInfo.entitlements[entitlementID]?.isActive == true
             errorMessage = nil
             
             print("✅ Subscription status checked: \(isSubscribed)")
-            print("Entitlements: \(customerInfo.entitlements.description)")
+            print("Looking for entitlement: \(entitlementID)")
             
         } catch {
             print("❌ Error checking subscription: \(error.localizedDescription)")
@@ -146,8 +152,16 @@ extension RevenueCatManager: PurchasesDelegate {
     nonisolated func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
         Task { @MainActor in
             self.customerInfo = customerInfo
+            
+            // Debug: Print all available entitlements
+            print("🔄 Delegate - Available entitlements:")
+            for (key, entitlement) in customerInfo.entitlements.all {
+                print("  - \(key): active=\(entitlement.isActive)")
+            }
+            
             self.isSubscribed = customerInfo.entitlements[self.entitlementID]?.isActive == true
             print("🔄 Subscription status updated: \(self.isSubscribed)")
+            print("🔄 Looking for entitlement: \(self.entitlementID)")
         }
     }
 }
