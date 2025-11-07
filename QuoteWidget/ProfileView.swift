@@ -107,6 +107,8 @@ struct ProfileView: View {
                     Button("Sign out", role: .destructive) {
                         Task {
                             try? await supabase.auth.signOut()
+                            // Post notification to update the UI
+                            NotificationCenter.default.post(name: .userDidSignOut, object: nil)
                         }
                     }
                     .buttonStyle(.borderedProminent)
@@ -163,7 +165,7 @@ struct ProfileView: View {
         errorMessage = nil
 
         do {
-            // Get the current user
+            // Get the current user - this will throw if no session exists
             let user = try await supabase.auth.user()
 
             // Fetch profile from Supabase
@@ -191,8 +193,14 @@ struct ProfileView: View {
                 profile = retryResponse.first
             }
         } catch {
-            errorMessage = "Failed to load profile: \(error.localizedDescription)"
-            print("Profile fetch error: \(error)")
+            // Don't show error message for session missing - it's expected after sign out
+            if error.localizedDescription.contains("sessionMissing") || error.localizedDescription.contains("Auth session is missing") {
+                print("Profile fetch: No auth session (user likely signed out)")
+                profile = nil
+            } else {
+                errorMessage = "Failed to load profile: \(error.localizedDescription)"
+                print("Profile fetch error: \(error)")
+            }
         }
 
         isLoading = false
