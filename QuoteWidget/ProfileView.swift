@@ -1,5 +1,6 @@
 import SwiftUI
 import Supabase
+import StoreKit
 
 struct ProfileView: View {
     @State var isLoading = false
@@ -8,6 +9,7 @@ struct ProfileView: View {
     @State var isEditingName = false
     @State var editedName = ""
     @State var isSaving = false
+    @AppStorage("hasUserReviewedApp") private var hasUserReviewedApp: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -103,6 +105,30 @@ struct ProfileView: View {
                     }
 
                     Spacer()
+
+                    // App Store Review Button
+                    VStack {
+                        Button(hasUserReviewedApp ? "Thank you for reviewing!" : "Rate App on App Store") {
+                            if !hasUserReviewedApp {
+                                openAppStoreReview()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(hasUserReviewedApp ? .green : .blue)
+                        .disabled(hasUserReviewedApp)
+                        .onLongPressGesture {
+                            if hasUserReviewedApp {
+                                // Reset review status (for testing)
+                                hasUserReviewedApp = false
+                            }
+                        }
+                        
+                        if hasUserReviewedApp {
+                            Text("Long press to reset")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
 
                     Button("Sign out", role: .destructive) {
                         Task {
@@ -204,5 +230,21 @@ struct ProfileView: View {
         }
 
         isLoading = false
+    }
+    
+    private func openAppStoreReview() {
+        // Mark that user has reviewed the app (they clicked the review button)
+        hasUserReviewedApp = true
+        
+        // TODO: Replace YOUR_APP_ID with your actual App Store ID when available
+        // For now, this will open the App Store app directly
+        guard let url = URL(string: "https://apps.apple.com/app/id1234567890?action=write-review") else { 
+            // Fallback to main App Store if review URL fails
+            if let fallbackURL = URL(string: "https://apps.apple.com/") {
+                UIApplication.shared.open(fallbackURL)
+            }
+            return 
+        }
+        UIApplication.shared.open(url)
     }
 }
