@@ -10,6 +10,7 @@ extension Notification.Name {
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var revenueCatManager: RevenueCatManager
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 0
     @State private var showPaywall = false
     @State private var syncService: QuoteSyncService?
@@ -57,6 +58,7 @@ struct ContentView: View {
                 MainAppView(selectedTab: $selectedTab, syncService: $syncService, modelContext: modelContext)
             }
         }
+        .preferredColorScheme(themeManager.currentTheme.colorScheme)
         .sheet(isPresented: $showPaywall) {
             SubscriptionPaywallView()
         }
@@ -205,4 +207,5 @@ struct MainAppView: View {
     ContentView()
         .modelContainer(SharedModelContainer.shared.container)
         .environmentObject(RevenueCatManager.shared)
+        .environmentObject(ThemeManager.shared)
 }

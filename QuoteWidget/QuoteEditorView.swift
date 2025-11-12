@@ -70,6 +70,14 @@ struct QuoteEditorView: View {
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            hideKeyboard()
+                        }
+                    }
+                }
             
             Button(action: saveQuote) {
                 Text("Save Quote")
@@ -86,6 +94,9 @@ struct QuoteEditorView: View {
         }
         .padding()
         .navigationTitle("Write Quote")
+        .onTapGesture {
+            hideKeyboard()
+        }
         .alert("Saved!", isPresented: $showingSavedAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -166,6 +177,10 @@ struct QuoteEditorView: View {
             }
             lastReviewPromptTime = 0 // Reset the timer
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
 }

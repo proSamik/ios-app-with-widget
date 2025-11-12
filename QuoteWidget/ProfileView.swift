@@ -10,6 +10,7 @@ struct ProfileView: View {
     @State var editedName = ""
     @State var isSaving = false
     @AppStorage("hasUserReviewedApp") private var hasUserReviewedApp: Bool = false
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
         NavigationStack {
@@ -102,6 +103,34 @@ struct ProfileView: View {
                             .font(.caption)
                             .foregroundColor(.red)
                             .padding()
+                    }
+
+                    // Theme Selection
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Theme")
+                            .font(.headline)
+                            .padding(.top)
+                        
+                        VStack(spacing: 8) {
+                            ForEach(AppTheme.allCases, id: \.self) { theme in
+                                HStack {
+                                    Image(systemName: themeManager.currentTheme == theme ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(themeManager.currentTheme == theme ? .blue : .gray)
+                                    
+                                    Text(theme.displayName)
+                                        .font(.body)
+                                    
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                                .onTapGesture {
+                                    themeManager.currentTheme = theme
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
                     }
 
                     Spacer()
