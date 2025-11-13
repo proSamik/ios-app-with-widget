@@ -125,7 +125,7 @@ struct APIQuotesView: View {
     
     private var quotesListView: some View {
         List(apiService.quotes) { quote in
-            QuoteRowView(quote: quote)
+            QuoteRowView(quote: quote, isQuoteOfTheDay: selectedCategory == .quoteOfTheDay)
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         }
         .listStyle(.plain)
@@ -139,16 +139,33 @@ struct APIQuotesView: View {
 
 struct QuoteRowView: View {
     let quote: APIQuote
+    let isQuoteOfTheDay: Bool
+    @State private var shouldShowTypewriter: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             
-            Text("\"\(quote.quote)\"")
-                .font(.body)
-                .fontWeight(.medium)
-                .italic()
-                .lineLimit(nil)
-                .foregroundColor(.primary)
+            // Use typewriter effect only for Quote of the Day
+            if isQuoteOfTheDay && shouldShowTypewriter {
+                TypewriterView(text: "\"\(quote.quote)\"")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .italic()
+                    .lineLimit(nil)
+                    .foregroundColor(.primary)
+            } else {
+                Text("\"\(quote.quote)\"")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .italic()
+                    .lineLimit(nil)
+                    .foregroundColor(.primary)
+                    .onAppear {
+                        if isQuoteOfTheDay {
+                            shouldShowTypewriter = true
+                        }
+                    }
+            }
             
             authorSection
             
