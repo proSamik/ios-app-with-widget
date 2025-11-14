@@ -33,5 +33,7 @@
 	<string>991467204739-6i50e59emoqqhs0ej3hkho1g9ge5t6a9.apps.googleusercontent.com</string>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to securely authenticate your access to the app and protect your personal quotes and data</string>
 </dict>
 </plist>
