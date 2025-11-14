@@ -22,7 +22,8 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            ScrollView {
+                VStack(spacing: 20) {
                 if isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
@@ -119,20 +120,29 @@ struct ProfileView: View {
                             .font(.headline)
                             .padding(.top)
                         
-                        VStack(spacing: 8) {
+                        HStack(spacing: 20) {
                             ForEach(AppTheme.allCases, id: \.self) { theme in
-                                HStack {
-                                    Image(systemName: themeManager.currentTheme == theme ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(themeManager.currentTheme == theme ? .blue : .gray)
+                                VStack(spacing: 8) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(themeManager.currentTheme == theme ? Color.blue.opacity(0.2) : Color(.systemGray5))
+                                            .frame(width: 60, height: 60)
+                                        
+                                        Image(systemName: theme.iconName)
+                                            .font(.system(size: 24))
+                                            .foregroundColor(themeManager.currentTheme == theme ? .blue : .primary)
+                                    }
                                     
                                     Text(theme.displayName)
-                                        .font(.body)
-                                    
-                                    Spacer()
+                                        .font(.caption)
+                                        .fontWeight(themeManager.currentTheme == theme ? .semibold : .regular)
+                                        .foregroundColor(themeManager.currentTheme == theme ? .blue : .secondary)
                                 }
-                                .padding(.vertical, 4)
+                                .frame(maxWidth: .infinity)
                                 .onTapGesture {
-                                    themeManager.currentTheme = theme
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        themeManager.currentTheme = theme
+                                    }
                                 }
                             }
                         }
@@ -166,7 +176,7 @@ struct ProfileView: View {
                                     Spacer()
                                     
                                     Toggle("", isOn: $isBiometricEnabled)
-                                        .onChange(of: isBiometricEnabled) { newValue in
+                                        .onChange(of: isBiometricEnabled) { oldValue, newValue in
                                             if newValue {
                                                 enableBiometricAuth()
                                             }
@@ -246,6 +256,7 @@ struct ProfileView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
+                }
             }
             .padding()
             .navigationTitle("Profile")
@@ -265,7 +276,8 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showPINVerification) {
                 PINVerificationView(pinManager: pinManager) {
-                    // Success action - you can add specific logic here
+                    // Success action - disable PIN after verification
+                    disablePINAfterVerification()
                 }
             }
             .alert("Security", isPresented: $showSecurityAlert) {
@@ -392,6 +404,12 @@ struct ProfileView: View {
             securityAlertMessage = success ? "PIN disabled successfully!" : "Failed to disable PIN"
             showSecurityAlert = true
         }
+    }
+    
+    private func disablePINAfterVerification() {
+        let success = pinManager.deletePIN()
+        securityAlertMessage = success ? "PIN disabled successfully!" : "Failed to disable PIN"
+        showSecurityAlert = true
     }
     
     // For testing biometric authentication

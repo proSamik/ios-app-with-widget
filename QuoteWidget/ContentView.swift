@@ -54,8 +54,10 @@ struct ContentView: View {
                 // Show onboarding/paywall for authenticated but non-subscribed users
                 OnboardingView(showPaywall: $showPaywall)
             } else {
-                // Show main app for subscribers
-                MainAppView(selectedTab: $selectedTab, syncService: $syncService, modelContext: modelContext)
+                // Show main app for subscribers with authentication gate
+                AuthenticationGateView {
+                    MainAppView(selectedTab: $selectedTab, syncService: $syncService, modelContext: modelContext)
+                }
             }
         }
         .preferredColorScheme(themeManager.currentTheme.colorScheme)

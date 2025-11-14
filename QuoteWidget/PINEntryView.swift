@@ -40,7 +40,7 @@ struct PINEntryView: View {
                                 .stroke(focusedField == index ? Color.blue : Color.gray.opacity(0.5), lineWidth: 2)
                         )
                         .focused($focusedField, equals: index)
-                        .onChange(of: pins[index]) { newValue in
+                        .onChange(of: pins[index]) { oldValue, newValue in
                             handlePINInput(index: index, value: newValue)
                         }
                         .onTapGesture {
@@ -128,7 +128,7 @@ struct PINSetupView: View {
                         title: "Set up PIN",
                         subtitle: "Enter a 4-digit PIN to secure your app"
                     )
-                    .onChange(of: firstPIN) { newValue in
+                    .onChange(of: firstPIN) { oldValue, newValue in
                         if newValue.count == 4 {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 withAnimation {
@@ -144,7 +144,7 @@ struct PINSetupView: View {
                         title: "Confirm PIN",
                         subtitle: "Enter your PIN again to confirm"
                     )
-                    .onChange(of: confirmPIN) { newValue in
+                    .onChange(of: confirmPIN) { oldValue, newValue in
                         if newValue.count == 4 {
                             setupPIN()
                         }
@@ -263,7 +263,7 @@ struct PINVerificationView: View {
                     title: "Enter PIN",
                     subtitle: attempts > 0 ? "Incorrect PIN. \(maxAttempts - attempts) attempts remaining." : nil
                 )
-                .onChange(of: enteredPIN) { newValue in
+                .onChange(of: enteredPIN) { oldValue, newValue in
                     if newValue.count == 4 {
                         verifyPIN()
                     }
