@@ -14,20 +14,17 @@ struct APIQuote: Codable, Identifiable {
 
 enum QuoteCategory: String, CaseIterable {
     case quoteOfTheDay = "Quote of the Day"
-    case success = "Success"
-    case wisdom = "Wisdom"
-    
+    case list = "List"
+
     var apiEndpoint: String {
         switch self {
         case .quoteOfTheDay:
-            return "/v2/quoteoftheday"
-        case .success:
-            return "/v2/quotes?categories=success&limit=10"
-        case .wisdom:
-            return "/v2/quotes?categories=wisdom&limit=10"
+            return "/api/quote/day"
+        case .list:
+            return "/api/quote/list"
         }
     }
-    
+
     var displayName: String {
         return self.rawValue
     }

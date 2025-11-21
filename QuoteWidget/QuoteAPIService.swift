@@ -4,9 +4,8 @@ import Combine
 
 @MainActor
 class QuoteAPIService: ObservableObject {
-    
-    private let apiKey = "efyrmdWjD181odJrbFykvw==F8y5iDSCDtlGAvbp"
-    private let baseURL = "https://api.api-ninjas.com"
+
+    private let baseURL = "https://quote-api-tau.vercel.app"
     
     @Published var quotes: [APIQuote] = []
     @Published var isLoading = false
@@ -49,7 +48,6 @@ class QuoteAPIService: ObservableObject {
         }
         
         var request = URLRequest(url: url)
-        request.setValue(apiKey, forHTTPHeaderField: "X-Api-Key")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpMethod = "GET"
         
