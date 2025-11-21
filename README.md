@@ -910,3 +910,22 @@ The database trigger automatically creates user profiles with:
 - **Email**: Always included from OAuth provider
 
 This ensures profiles are created immediately with proper data and no duplicate key errors.
+
+
+----
+
+## Last updated SQL Code
+
+ -- Add new columns to the quotes table
+  ALTER TABLE quotes
+  ADD COLUMN is_favorite BOOLEAN DEFAULT FALSE NOT NULL,
+  ADD COLUMN author TEXT,
+  ADD COLUMN categories TEXT[] DEFAULT '{}' NOT NULL;
+
+  -- Create an index on is_favorite for faster filtering of favorite quotes
+  CREATE INDEX idx_quotes_is_favorite ON quotes(user_id, is_favorite) WHERE
+  is_favorite = TRUE;
+
+  -- Create an index on categories for faster filtering by category
+  CREATE INDEX idx_quotes_categories ON quotes USING GIN(categories);
+
