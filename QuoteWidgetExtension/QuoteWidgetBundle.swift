@@ -33,23 +33,25 @@ struct QuoteProvider: @MainActor TimelineProvider {
     // Main timeline generation
     @MainActor func getTimeline(in context: Context, completion: @escaping (Timeline<QuoteEntry>) -> Void) {
         let entry = fetchCurrentEntry()
-        
-        // Refresh widget every 15 minutes
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        
+
+        // Use .atEnd policy so widget can be updated immediately when reloadAllTimelines() is called
+        let timeline = Timeline(entries: [entry], policy: .atEnd)
+
         completion(timeline)
     }
     
     // Helper to fetch quotes from SwiftData
     @MainActor
     private func fetchCurrentEntry() -> QuoteEntry {
-        let modelContext = SharedModelContainer.shared.container.mainContext
-        
+        let container = SharedModelContainer.shared.container
+
+        // Create a fresh context to avoid caching issues
+        let modelContext = ModelContext(container)
+
         let descriptor = FetchDescriptor<Quote>(
             sortBy: [SortDescriptor(\Quote.timestamp, order: .reverse)]
         )
-        
+
         do {
             let quotes = try modelContext.fetch(descriptor)
             let currentQuote = quotes.first

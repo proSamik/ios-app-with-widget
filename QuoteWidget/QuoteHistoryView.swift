@@ -1,35 +1,62 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct QuoteHistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var syncService: QuoteSyncService
     @Query(sort: \Quote.timestamp, order: .reverse) private var quotes: [Quote]
-    
+
+    var favoriteQuotes: [Quote] {
+        quotes.filter { $0.isFavorite }
+    }
+
     var body: some View {
         List {
-            if quotes.isEmpty {
+            if favoriteQuotes.isEmpty {
                 ContentUnavailableView(
-                    "No Quotes Yet",
-                    systemImage: "quote.bubble",
-                    description: Text("Start writing quotes to see them here")
+                    "No Favourites Yet",
+                    systemImage: "star",
+                    description: Text("Star quotes from Discover to see them here")
                 )
             } else {
-                ForEach(quotes) { quote in
+                ForEach(favoriteQuotes) { quote in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(quote.text)
                             .font(.body)
-                        
+
+                        if let author = quote.author {
+                            Text("— \(author)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
                         Text(quote.timestamp.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
                     .padding(.vertical, 4)
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            Task {
+                                await setAsCurrentQuote(quote)
+                            }
+                        } label: {
+                            Label("Set Current", systemImage: "star.circle.fill")
+                        }
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            deleteQuote(quote)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
-                .onDelete(perform: deleteQuotes)
             }
         }
-        .navigationTitle("Quote History")
+        .navigationTitle("Favourites")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Refresh") {
@@ -57,12 +84,14 @@ struct QuoteHistoryView: View {
         }
     }
     
-    func deleteQuotes(at offsets: IndexSet) {
-        for index in offsets {
-            let quote = quotes[index]
-            Task {
-                await syncService.deleteQuote(quote)
-            }
+    func deleteQuote(_ quote: Quote) {
+        Task {
+            await syncService.deleteQuote(quote)
         }
+    }
+
+    func setAsCurrentQuote(_ quote: Quote) async {
+        await syncService.updateQuoteAsCurrent(quote)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }

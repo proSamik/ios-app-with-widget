@@ -161,31 +161,32 @@ struct MainAppView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
+                APIQuotesView()
+                    .environmentObject(syncService ?? QuoteSyncService(modelContext: modelContext))
+            }
+            .tabItem {
+                Label("Discover", systemImage: "globe")
+            }
+            .tag(0)
+
+            NavigationStack {
+                QuoteHistoryView()
+                    .environmentObject(syncService ?? QuoteSyncService(modelContext: modelContext))
+            }
+            .tabItem {
+                Label("Favourites", systemImage: "star.fill")
+            }
+            .tag(1)
+
+            NavigationStack {
                 QuoteEditorView()
                     .environmentObject(syncService ?? QuoteSyncService(modelContext: modelContext))
             }
             .tabItem {
                 Label("Write", systemImage: "pencil")
             }
-            .tag(0)
-            
-            NavigationStack {
-                QuoteHistoryView()
-                    .environmentObject(syncService ?? QuoteSyncService(modelContext: modelContext))
-            }
-            .tabItem {
-                Label("History", systemImage: "clock.arrow.circlepath")
-            }
-            .tag(1)
-            
-            NavigationStack {
-                APIQuotesView()
-            }
-            .tabItem {
-                Label("Discover", systemImage: "globe")
-            }
             .tag(2)
-            
+
             NavigationStack {
                 ProfileView()
             }
