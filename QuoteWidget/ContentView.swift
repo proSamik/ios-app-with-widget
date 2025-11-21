@@ -157,7 +157,7 @@ struct MainAppView: View {
     @Binding var syncService: QuoteSyncService?
     let modelContext: ModelContext
     @EnvironmentObject var revenueCatManager: RevenueCatManager
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
@@ -169,6 +169,12 @@ struct MainAppView: View {
             }
             .tag(0)
 
+            ShortsView()
+                .tabItem {
+                    Label("Shorts", systemImage: "play.rectangle.fill")
+                }
+                .tag(1)
+
             NavigationStack {
                 QuoteHistoryView()
                     .environmentObject(syncService ?? QuoteSyncService(modelContext: modelContext))
@@ -176,7 +182,7 @@ struct MainAppView: View {
             .tabItem {
                 Label("Favourites", systemImage: "star.fill")
             }
-            .tag(1)
+            .tag(2)
 
             NavigationStack {
                 QuoteEditorView()
@@ -185,7 +191,7 @@ struct MainAppView: View {
             .tabItem {
                 Label("Write", systemImage: "pencil")
             }
-            .tag(2)
+            .tag(3)
 
             NavigationStack {
                 ProfileView()
@@ -193,7 +199,7 @@ struct MainAppView: View {
             .tabItem {
                 Label("Profile", systemImage: "person.circle")
             }
-            .tag(3)
+            .tag(4)
         }
         .onAppear {
             if syncService == nil {
