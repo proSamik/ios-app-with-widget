@@ -1,29 +1,90 @@
 import SwiftUI
-import WebKit
+import YouTubeiOSPlayerHelper
 
-// MARK: - Inline YouTube WebView
-struct YouTubeWebView: UIViewRepresentable {
+// MARK: - YouTube Player using YouTubeiOSPlayerHelper
+struct YouTubePlayerView: UIViewRepresentable {
     let videoID: String
+    let isVisible: Bool
+    @Binding var isLoading: Bool
 
-    func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.allowsInlineMediaPlayback = true
-        config.mediaTypesRequiringUserActionForPlayback = []
-
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.backgroundColor = .black
-        webView.isOpaque = false
-        webView.scrollView.backgroundColor = .black
-
-        // Load YouTube watch page
-        if let url = URL(string: "https://www.youtube.com/watch?v=\(videoID)") {
-            webView.load(URLRequest(url: url))
-        }
-
-        return webView
+    func makeUIView(context: Context) -> YTPlayerView {
+        let playerView = YTPlayerView()
+        playerView.delegate = context.coordinator
+        playerView.backgroundColor = .black
+        return playerView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: YTPlayerView, context: Context) {
+        // Load video if ID changed
+        if context.coordinator.loadedVideoID != videoID {
+            context.coordinator.loadedVideoID = videoID
+            isLoading = true
+
+            let playerVars: [String: Any] = [
+                "playsinline": 1,
+                "autoplay": 1,
+                "controls": 1,
+                "rel": 0,
+                "modestbranding": 1,
+                "showinfo": 0,
+                "fs": 1
+            ]
+
+            uiView.load(withVideoId: videoID, playerVars: playerVars)
+        }
+
+        // Handle visibility changes - pause/play based on scroll
+        if context.coordinator.wasVisible != isVisible {
+            context.coordinator.wasVisible = isVisible
+            if isVisible {
+                uiView.playVideo()
+                print("▶️ Playing video: \(videoID)")
+            } else {
+                uiView.pauseVideo()
+                print("⏸️ Paused video: \(videoID)")
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isLoading: $isLoading)
+    }
+
+    class Coordinator: NSObject, YTPlayerViewDelegate {
+        var loadedVideoID: String?
+        var wasVisible: Bool = true
+        @Binding var isLoading: Bool
+
+        init(isLoading: Binding<Bool>) {
+            self._isLoading = isLoading
+        }
+
+        func playerViewDidBecomeReady(_ playerView: YTPlayerView) {
+            DispatchQueue.main.async {
+                self.isLoading = false
+            }
+            playerView.playVideo()
+            print("✅ YouTube player ready and playing")
+        }
+
+        func playerView(_ playerView: YTPlayerView, didChangeTo state: YTPlayerState) {
+            print("Player state: \(state.rawValue)")
+
+            // Loop video when it ends
+            if state == .ended {
+                playerView.seek(toSeconds: 0, allowSeekAhead: true)
+                playerView.playVideo()
+                print("🔄 Video ended, restarting")
+            }
+        }
+
+        func playerView(_ playerView: YTPlayerView, receivedError error: YTPlayerError) {
+            DispatchQueue.main.async {
+                self.isLoading = false
+            }
+            print("❌ Player error: \(error.rawValue)")
+        }
+    }
 }
 
 // MARK: - Single Short Video View
@@ -35,6 +96,7 @@ struct ShortVideoView: View {
     let onNavigateUp: () -> Void
     let onNavigateDown: () -> Void
     @State private var isPlaying = false
+    @State private var isLoadingPlayer = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -42,14 +104,21 @@ struct ShortVideoView: View {
                 Color.black
 
                 if isPlaying {
-                    // Inline YouTube Player
-                    YouTubeWebView(videoID: video.videoID)
-                        .frame(width: geometry.size.width, height: geometry.size.height)
+                    // Show loading spinner while YouTube loads
+                    if isLoadingPlayer {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(1.5)
+                    }
 
-                    // Navigation controls at top center
+                    // YouTube Player using YouTubeiOSPlayerHelper
+                    YouTubePlayerView(videoID: video.videoID, isVisible: isVisible, isLoading: $isLoadingPlayer)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .opacity(isLoadingPlayer ? 0 : 1)
+
+                    // Navigation controls
                     VStack {
                         HStack(spacing: 20) {
-                            // Up arrow
                             Button(action: onNavigateUp) {
                                 Image(systemName: "chevron.up.circle.fill")
                                     .font(.system(size: 32))
@@ -58,7 +127,6 @@ struct ShortVideoView: View {
                             }
                             .disabled(!canGoUp)
 
-                            // Close button
                             Button(action: { isPlaying = false }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 36))
@@ -66,7 +134,6 @@ struct ShortVideoView: View {
                                     .shadow(color: .black, radius: 4)
                             }
 
-                            // Down arrow
                             Button(action: onNavigateDown) {
                                 Image(systemName: "chevron.down.circle.fill")
                                     .font(.system(size: 32))

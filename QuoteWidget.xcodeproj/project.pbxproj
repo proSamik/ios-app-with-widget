@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C154735A2ED11873006CA5DD /* YouTubeiOSPlayerHelper in Frameworks */ = {isa = PBXBuildFile; productRef = C15473592ED11873006CA5DD /* YouTubeiOSPlayerHelper */; };
 		C16AF9582EBE842C006B7747 /* ReceiptParser in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF9572EBE842C006B7747 /* ReceiptParser */; };
 		C16AF95A2EBE842C006B7747 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = C16AF9592EBE842C006B7747 /* RevenueCat */; };
 		C16AF9602EBE8482006B7747 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C16AF95F2EBE8482006B7747 /* StoreKit.framework */; };
@@ -116,6 +117,7 @@
 				C1FEA5082EBD485B0093A0D5 /* GoogleSignInSwift in Frameworks */,
 				C1DFD6AB2EB7F0DE00CDCC77 /* Auth in Frameworks */,
 				C1DFD6B32EB7F0DE00CDCC77 /* Storage in Frameworks */,
+				C154735A2ED11873006CA5DD /* YouTubeiOSPlayerHelper in Frameworks */,
 				C16AF96C2EBEA209006B7747 /* RevenueCatUI in Frameworks */,
 				C1DFD6B12EB7F0DE00CDCC77 /* Realtime in Frameworks */,
 				C16AF9602EBE8482006B7747 /* StoreKit.framework in Frameworks */,
@@ -198,6 +200,7 @@
 				C16AF9572EBE842C006B7747 /* ReceiptParser */,
 				C16AF9592EBE842C006B7747 /* RevenueCat */,
 				C16AF96B2EBEA209006B7747 /* RevenueCatUI */,
+				C15473592ED11873006CA5DD /* YouTubeiOSPlayerHelper */,
 			);
 			productName = QuoteWidget;
 			productReference = C1BB35AD2EB2992B004CDAA5 /* QuoteWidget.app */;
@@ -256,6 +259,7 @@
 				C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				C1FEA5042EBD3CDE0093A0D5 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				C11618782EBE418A00AA7EC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				C15473582ED1185B006CA5DD /* XCRemoteSwiftPackageReference "youtube-ios-player-helper" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C1BB35AE2EB2992B004CDAA5 /* Products */;
@@ -613,6 +617,14 @@
 				minimumVersion = 5.46.2;
 			};
 		};
+		C15473582ED1185B006CA5DD /* XCRemoteSwiftPackageReference "youtube-ios-player-helper" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/youtube/youtube-ios-player-helper";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
 		C1DFD6A92EB7F0CB00CDCC77 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -632,6 +644,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		C15473592ED11873006CA5DD /* YouTubeiOSPlayerHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C15473582ED1185B006CA5DD /* XCRemoteSwiftPackageReference "youtube-ios-player-helper" */;
+			productName = YouTubeiOSPlayerHelper;
+		};
 		C16AF9572EBE842C006B7747 /* ReceiptParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C11618782EBE418A00AA7EC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
