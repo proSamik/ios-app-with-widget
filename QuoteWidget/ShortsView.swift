@@ -87,11 +87,14 @@ struct YouTubePlayerView: UIViewRepresentable {
 
         func playerViewDidBecomeReady(_ playerView: YTPlayerView) {
             isPlayerReady = true
-            isCurrentlyPlaying = true
             DispatchQueue.main.async {
                 self.isLoading = false
             }
-            playerView.playVideo()
+            // Auto-play if this video is the currently visible one
+            if VideoStateManager.shared.currentVisibleVideoID == videoID {
+                playerView.playVideo()
+                isCurrentlyPlaying = true
+            }
         }
 
         func playerView(_ playerView: YTPlayerView, didChangeTo state: YTPlayerState) {
@@ -124,173 +127,61 @@ struct YouTubePlayerView: UIViewRepresentable {
 struct ShortVideoView: View {
     let video: Video
     let isVisible: Bool
-    let canGoUp: Bool
-    let canGoDown: Bool
-    let onNavigateUp: () -> Void
-    let onNavigateDown: () -> Void
-    @State private var isPlaying = false
-    @State private var isLoadingPlayer = false
+    @State private var isLoadingPlayer = true
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 Color.black
 
-                if isPlaying {
-                    // Show loading spinner while YouTube loads
-                    if isLoadingPlayer {
-                        ProgressView()
-                            .tint(.white)
-                            .scaleEffect(1.5)
-                    }
-
-                    // YouTube Player using YouTubeiOSPlayerHelper
-                    YouTubePlayerView(videoID: video.videoID, isLoading: $isLoadingPlayer)
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .opacity(isLoadingPlayer ? 0 : 1)
-
-                    // Navigation controls
-                    VStack {
-                        HStack(spacing: 20) {
-                            Button(action: onNavigateUp) {
-                                Image(systemName: "chevron.up.circle.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(canGoUp ? .white : .white.opacity(0.3))
-                                    .shadow(color: .black, radius: 4)
-                            }
-                            .disabled(!canGoUp)
-
-                            Button(action: { isPlaying = false }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 36))
-                                    .foregroundColor(.white)
-                                    .shadow(color: .black, radius: 4)
-                            }
-
-                            Button(action: onNavigateDown) {
-                                Image(systemName: "chevron.down.circle.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(canGoDown ? .white : .white.opacity(0.3))
-                                    .shadow(color: .black, radius: 4)
-                            }
-                            .disabled(!canGoDown)
-                        }
-                        .padding(.top, 60)
-
-                        Spacer()
-                    }
-                } else {
-                    // YouTube Thumbnail
-                    AsyncImage(url: thumbnailURL) { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                                .tint(.white)
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .clipped()
-                        case .failure:
-                            AsyncImage(url: fallbackThumbnailURL) { fallbackPhase in
-                                switch fallbackPhase {
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: geometry.size.width, height: geometry.size.height)
-                                        .clipped()
-                                default:
-                                    Image(systemName: "play.rectangle.fill")
-                                        .font(.system(size: 60))
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
-
-                    // Tap to play
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isPlaying = true
-                            }
-                        }
-
-                    // Play button
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isPlaying = true
-                        }
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.red)
-                                .frame(width: 80, height: 80)
-
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 35))
-                                .foregroundColor(.white)
-                                .offset(x: 4)
-                        }
-                    }
-                    .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
-
-                    // Title overlay
-                    VStack {
-                        Spacer()
-                        HStack(alignment: .bottom) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(video.name)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    .shadow(color: .black, radius: 4, x: 0, y: 2)
-                                    .lineLimit(2)
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.bottom, 100)
-
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            LinearGradient(
-                                colors: [.clear, .black.opacity(0.8)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 200)
-                        )
-                    }
+                // Show loading spinner while YouTube loads
+                if isLoadingPlayer {
+                    ProgressView()
+                        .tint(.white)
+                        .scaleEffect(1.5)
                 }
+
+                // YouTube Player - always loaded, VideoStateManager controls playback
+                YouTubePlayerView(videoID: video.videoID, isLoading: $isLoadingPlayer)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .opacity(isLoadingPlayer ? 0 : 1)
+
+                // Title overlay at bottom
+                VStack {
+                    Spacer()
+                    HStack(alignment: .bottom) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(video.name)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .shadow(color: .black, radius: 4, x: 0, y: 2)
+                                .lineLimit(2)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 100)
+
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        LinearGradient(
+                            colors: [.clear, .black.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 200)
+                    )
+                }
+                .allowsHitTesting(false)
             }
         }
         .ignoresSafeArea()
-        .onChange(of: isVisible) { _, newValue in
-            if newValue {
-                VideoStateManager.shared.setVisible(video.videoID)
-                isPlaying = true
-            }
-        }
         .onAppear {
             if isVisible {
                 VideoStateManager.shared.setVisible(video.videoID)
-                isPlaying = true
             }
         }
-    }
-
-    private var thumbnailURL: URL? {
-        URL(string: "https://img.youtube.com/vi/\(video.videoID)/maxresdefault.jpg")
-    }
-
-    private var fallbackThumbnailURL: URL? {
-        URL(string: "https://img.youtube.com/vi/\(video.videoID)/hqdefault.jpg")
     }
 }
 
@@ -298,6 +189,7 @@ struct ShortVideoView: View {
 struct VerticalPagingView<Content: View>: UIViewControllerRepresentable {
     let pageCount: Int
     @Binding var currentPage: Int
+    let videos: [Video]
     let content: (Int) -> Content
 
     func makeUIViewController(context: Context) -> UIPageViewController {
@@ -364,8 +256,13 @@ struct VerticalPagingView<Content: View>: UIViewControllerRepresentable {
         func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
             if completed,
                let vc = pageViewController.viewControllers?.first as? PageHostingController<Content> {
+                let newIndex = vc.pageIndex
                 DispatchQueue.main.async {
-                    self.parent.currentPage = vc.pageIndex
+                    self.parent.currentPage = newIndex
+                    // Directly update VideoStateManager when gesture scroll completes
+                    if newIndex < self.parent.videos.count {
+                        VideoStateManager.shared.setVisible(self.parent.videos[newIndex].videoID)
+                    }
                 }
             }
         }
@@ -438,23 +335,12 @@ struct ShortsView: View {
             } else {
                 VerticalPagingView(
                     pageCount: videoService.videos.count,
-                    currentPage: $currentIndex
+                    currentPage: $currentIndex,
+                    videos: videoService.videos
                 ) { index in
                     ShortVideoView(
                         video: videoService.videos[index],
-                        isVisible: index == currentIndex,
-                        canGoUp: index > 0,
-                        canGoDown: index < videoService.videos.count - 1,
-                        onNavigateUp: {
-                            if currentIndex > 0 {
-                                currentIndex -= 1
-                            }
-                        },
-                        onNavigateDown: {
-                            if currentIndex < videoService.videos.count - 1 {
-                                currentIndex += 1
-                            }
-                        }
+                        isVisible: index == currentIndex
                     )
                 }
                 .ignoresSafeArea()
@@ -481,13 +367,13 @@ struct ShortsView: View {
         .task {
             await videoService.fetchVideos()
         }
-        .onChange(of: currentIndex) { _, newIndex in
+        .onChange(of: currentIndex, initial: true) { _, newIndex in
             // Update the visible video when page changes
             if !videoService.videos.isEmpty && newIndex < videoService.videos.count {
                 VideoStateManager.shared.setVisible(videoService.videos[newIndex].videoID)
             }
         }
-        .onChange(of: videoService.videos.count) { _, count in
+        .onChange(of: videoService.videos.count, initial: true) { _, count in
             // Set initial visible video when videos load
             if count > 0 && currentIndex < count {
                 VideoStateManager.shared.setVisible(videoService.videos[currentIndex].videoID)

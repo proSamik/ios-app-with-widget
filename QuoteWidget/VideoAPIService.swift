@@ -37,7 +37,6 @@ class VideoAPIService: ObservableObject {
         // Return cached data if valid and not forcing refresh
         if !forceRefresh, isCacheValid, let cached = Self.cachedVideos {
             videos = cached
-            print("📦 Using cached videos (\(cached.count) items)")
             return
         }
 
@@ -58,7 +57,6 @@ class VideoAPIService: ObservableObject {
             // Fall back to cache if available
             if let cached = Self.cachedVideos {
                 videos = cached
-                print("⚠️ Using stale cache due to error")
             } else {
                 videos = []
             }
@@ -76,15 +74,11 @@ class VideoAPIService: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.httpMethod = "GET"
 
-        print("🌐 Making API request to: \(url.absoluteString)")
-
         let (data, response) = try await urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
-
-        print("📊 API Response Status: \(httpResponse.statusCode)")
 
         guard 200...299 ~= httpResponse.statusCode else {
             throw APIError.serverError(httpResponse.statusCode)
@@ -93,12 +87,8 @@ class VideoAPIService: ObservableObject {
         do {
             let decoder = JSONDecoder()
             let apiVideos = try decoder.decode([Video].self, from: data)
-
-            print("✅ Successfully parsed \(apiVideos.count) videos")
             return apiVideos
-
         } catch {
-            print("❌ JSON Parsing Error: \(error)")
             throw APIError.decodingError(error)
         }
     }
