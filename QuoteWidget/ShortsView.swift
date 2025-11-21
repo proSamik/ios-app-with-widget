@@ -6,6 +6,11 @@ import YouTubeiOSPlayerHelper
 class VideoStateManager: ObservableObject {
     static let shared = VideoStateManager()
     @Published var currentVisibleVideoID: String?
+    @Published var shouldResume: Bool = false
+    @Published var currentVideoIndex: Int = 0
+
+    // Store playback positions for each video
+    private var playbackPositions: [String: Float] = [:]
 
     private init() {}
 
@@ -13,6 +18,26 @@ class VideoStateManager: ObservableObject {
         if currentVisibleVideoID != videoID {
             currentVisibleVideoID = videoID
         }
+    }
+
+    func resumePlayback() {
+        // Toggle to trigger observers
+        shouldResume = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.shouldResume = false
+        }
+    }
+
+    func savePosition(for videoID: String, time: Float) {
+        playbackPositions[videoID] = time
+    }
+
+    func getPosition(for videoID: String) -> Float {
+        return playbackPositions[videoID] ?? 0
+    }
+
+    func setCurrentIndex(_ index: Int) {
+        currentVideoIndex = index
     }
 }
 
@@ -60,11 +85,32 @@ struct YouTubePlayerView: UIViewRepresentable {
 
         if context.coordinator.isPlayerReady {
             if isVisible && !context.coordinator.isCurrentlyPlaying {
+                // Resume from saved position
+                let savedPosition = VideoStateManager.shared.getPosition(for: videoID)
+                if savedPosition > 0 {
+                    uiView.seek(toSeconds: savedPosition, allowSeekAhead: true)
+                }
                 uiView.playVideo()
                 context.coordinator.isCurrentlyPlaying = true
             } else if !isVisible && context.coordinator.isCurrentlyPlaying {
+                // Save current position before pausing
+                uiView.currentTime { time, error in
+                    if error == nil {
+                        VideoStateManager.shared.savePosition(for: videoID, time: time)
+                    }
+                }
                 uiView.pauseVideo()
                 context.coordinator.isCurrentlyPlaying = false
+            }
+
+            // Handle resume signal (when returning from navigation or background)
+            if stateManager.shouldResume && isVisible {
+                let savedPosition = VideoStateManager.shared.getPosition(for: videoID)
+                if savedPosition > 0 {
+                    uiView.seek(toSeconds: savedPosition, allowSeekAhead: true)
+                }
+                uiView.playVideo()
+                context.coordinator.isCurrentlyPlaying = true
             }
         }
     }
@@ -103,12 +149,24 @@ struct YouTubePlayerView: UIViewRepresentable {
                 isCurrentlyPlaying = true
             } else if state == .paused {
                 isCurrentlyPlaying = false
+                // Save position when paused
+                if let vid = videoID {
+                    playerView.currentTime { time, error in
+                        if error == nil {
+                            VideoStateManager.shared.savePosition(for: vid, time: time)
+                        }
+                    }
+                }
             }
 
             // Loop video when it ends
             if state == .ended {
                 // Only loop if this video is still visible
                 if VideoStateManager.shared.currentVisibleVideoID == videoID {
+                    // Clear saved position when looping
+                    if let vid = videoID {
+                        VideoStateManager.shared.savePosition(for: vid, time: 0)
+                    }
                     playerView.seek(toSeconds: 0, allowSeekAhead: true)
                     playerView.playVideo()
                 }
@@ -262,6 +320,7 @@ struct VerticalPagingView<Content: View>: UIViewControllerRepresentable {
                     // Directly update VideoStateManager when gesture scroll completes
                     if newIndex < self.parent.videos.count {
                         VideoStateManager.shared.setVisible(self.parent.videos[newIndex].videoID)
+                        VideoStateManager.shared.setCurrentIndex(newIndex)
                     }
                 }
             }
@@ -276,7 +335,8 @@ class PageHostingController<Content: View>: UIHostingController<Content> {
 // MARK: - Main Shorts Feed View
 struct ShortsView: View {
     @StateObject private var videoService = VideoAPIService()
-    @State private var currentIndex = 0
+    @State private var currentIndex = VideoStateManager.shared.currentVideoIndex
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -371,12 +431,29 @@ struct ShortsView: View {
             // Update the visible video when page changes
             if !videoService.videos.isEmpty && newIndex < videoService.videos.count {
                 VideoStateManager.shared.setVisible(videoService.videos[newIndex].videoID)
+                VideoStateManager.shared.setCurrentIndex(newIndex)
             }
         }
         .onChange(of: videoService.videos.count, initial: true) { _, count in
             // Set initial visible video when videos load
             if count > 0 && currentIndex < count {
                 VideoStateManager.shared.setVisible(videoService.videos[currentIndex].videoID)
+            }
+        }
+        .onAppear {
+            // Resume playback when navigating back to this view
+            if !videoService.videos.isEmpty && currentIndex < videoService.videos.count {
+                VideoStateManager.shared.setVisible(videoService.videos[currentIndex].videoID)
+                VideoStateManager.shared.resumePlayback()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Resume playback when app comes back to foreground
+            if newPhase == .active {
+                if !videoService.videos.isEmpty && currentIndex < videoService.videos.count {
+                    VideoStateManager.shared.setVisible(videoService.videos[currentIndex].videoID)
+                    VideoStateManager.shared.resumePlayback()
+                }
             }
         }
     }
