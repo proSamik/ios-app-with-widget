@@ -1,16 +1,33 @@
 import SwiftUI
+import Combine
 import YouTubeiOSPlayerHelper
+
+// MARK: - Shared Video State Manager
+class VideoStateManager: ObservableObject {
+    static let shared = VideoStateManager()
+    @Published var currentVisibleVideoID: String?
+
+    private init() {}
+
+    func setVisible(_ videoID: String) {
+        if currentVisibleVideoID != videoID {
+            currentVisibleVideoID = videoID
+        }
+    }
+}
 
 // MARK: - YouTube Player using YouTubeiOSPlayerHelper
 struct YouTubePlayerView: UIViewRepresentable {
     let videoID: String
-    let isVisible: Bool
     @Binding var isLoading: Bool
+    @ObservedObject private var stateManager = VideoStateManager.shared
 
     func makeUIView(context: Context) -> YTPlayerView {
         let playerView = YTPlayerView()
         playerView.delegate = context.coordinator
         playerView.backgroundColor = .black
+        context.coordinator.videoID = videoID
+        context.coordinator.currentPlayerView = playerView
         return playerView
     }
 
@@ -18,7 +35,12 @@ struct YouTubePlayerView: UIViewRepresentable {
         // Load video if ID changed
         if context.coordinator.loadedVideoID != videoID {
             context.coordinator.loadedVideoID = videoID
-            isLoading = true
+            context.coordinator.videoID = videoID
+            context.coordinator.isPlayerReady = false
+
+            DispatchQueue.main.async {
+                isLoading = true
+            }
 
             let playerVars: [String: Any] = [
                 "playsinline": 1,
@@ -33,15 +55,16 @@ struct YouTubePlayerView: UIViewRepresentable {
             uiView.load(withVideoId: videoID, playerVars: playerVars)
         }
 
-        // Handle visibility changes - pause/play based on scroll
-        if context.coordinator.wasVisible != isVisible {
-            context.coordinator.wasVisible = isVisible
-            if isVisible {
+        // Handle visibility changes - pause/play based on shared state
+        let isVisible = stateManager.currentVisibleVideoID == videoID
+
+        if context.coordinator.isPlayerReady {
+            if isVisible && !context.coordinator.isCurrentlyPlaying {
                 uiView.playVideo()
-                print("▶️ Playing video: \(videoID)")
-            } else {
+                context.coordinator.isCurrentlyPlaying = true
+            } else if !isVisible && context.coordinator.isCurrentlyPlaying {
                 uiView.pauseVideo()
-                print("⏸️ Paused video: \(videoID)")
+                context.coordinator.isCurrentlyPlaying = false
             }
         }
     }
@@ -52,7 +75,10 @@ struct YouTubePlayerView: UIViewRepresentable {
 
     class Coordinator: NSObject, YTPlayerViewDelegate {
         var loadedVideoID: String?
-        var wasVisible: Bool = true
+        var videoID: String?
+        var isPlayerReady: Bool = false
+        var isCurrentlyPlaying: Bool = false
+        weak var currentPlayerView: YTPlayerView?
         @Binding var isLoading: Bool
 
         init(isLoading: Binding<Bool>) {
@@ -60,21 +86,29 @@ struct YouTubePlayerView: UIViewRepresentable {
         }
 
         func playerViewDidBecomeReady(_ playerView: YTPlayerView) {
+            isPlayerReady = true
+            isCurrentlyPlaying = true
             DispatchQueue.main.async {
                 self.isLoading = false
             }
             playerView.playVideo()
-            print("✅ YouTube player ready and playing")
         }
 
         func playerView(_ playerView: YTPlayerView, didChangeTo state: YTPlayerState) {
-            print("Player state: \(state.rawValue)")
+            // Track playing state
+            if state == .playing {
+                isCurrentlyPlaying = true
+            } else if state == .paused {
+                isCurrentlyPlaying = false
+            }
 
             // Loop video when it ends
             if state == .ended {
-                playerView.seek(toSeconds: 0, allowSeekAhead: true)
-                playerView.playVideo()
-                print("🔄 Video ended, restarting")
+                // Only loop if this video is still visible
+                if VideoStateManager.shared.currentVisibleVideoID == videoID {
+                    playerView.seek(toSeconds: 0, allowSeekAhead: true)
+                    playerView.playVideo()
+                }
             }
         }
 
@@ -82,7 +116,6 @@ struct YouTubePlayerView: UIViewRepresentable {
             DispatchQueue.main.async {
                 self.isLoading = false
             }
-            print("❌ Player error: \(error.rawValue)")
         }
     }
 }
@@ -112,7 +145,7 @@ struct ShortVideoView: View {
                     }
 
                     // YouTube Player using YouTubeiOSPlayerHelper
-                    YouTubePlayerView(videoID: video.videoID, isVisible: isVisible, isLoading: $isLoadingPlayer)
+                    YouTubePlayerView(videoID: video.videoID, isLoading: $isLoadingPlayer)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .opacity(isLoadingPlayer ? 0 : 1)
 
@@ -240,11 +273,13 @@ struct ShortVideoView: View {
         .ignoresSafeArea()
         .onChange(of: isVisible) { _, newValue in
             if newValue {
+                VideoStateManager.shared.setVisible(video.videoID)
                 isPlaying = true
             }
         }
         .onAppear {
             if isVisible {
+                VideoStateManager.shared.setVisible(video.videoID)
                 isPlaying = true
             }
         }
@@ -445,6 +480,18 @@ struct ShortsView: View {
         }
         .task {
             await videoService.fetchVideos()
+        }
+        .onChange(of: currentIndex) { _, newIndex in
+            // Update the visible video when page changes
+            if !videoService.videos.isEmpty && newIndex < videoService.videos.count {
+                VideoStateManager.shared.setVisible(videoService.videos[newIndex].videoID)
+            }
+        }
+        .onChange(of: videoService.videos.count) { _, count in
+            // Set initial visible video when videos load
+            if count > 0 && currentIndex < count {
+                VideoStateManager.shared.setVisible(videoService.videos[currentIndex].videoID)
+            }
         }
     }
 }
