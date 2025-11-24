@@ -1,6 +1,6 @@
 # Building a Quote Widget iOS App: Complete Beginner's Guide
 
-As a complete beginner, you'll learn how to build a Swift iOS app where users can write quotes, save them, view history, and sync everything with a home screen widget. This guide walks you through every step from creating a new Xcode project to implementing shared data between your app and widget.
+The only Motivation platform you need.
 
 ## Project Overview
 
