@@ -4,6 +4,7 @@ import StoreKit
 import LocalAuthentication
 
 struct ProfileView: View {
+    @EnvironmentObject var revenueCatManager: RevenueCatManager
     @State var isLoading = false
     @State var profile: UserProfile?
     @State var errorMessage: String?
@@ -250,6 +251,7 @@ struct ProfileView: View {
                     Button("Sign out", role: .destructive) {
                         Task {
                             try? await supabase.auth.signOut()
+                            await revenueCatManager.signOut()
                             // Post notification to update the UI
                             NotificationCenter.default.post(name: .userDidSignOut, object: nil)
                         }

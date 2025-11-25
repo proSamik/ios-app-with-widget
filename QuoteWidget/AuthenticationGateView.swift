@@ -2,6 +2,8 @@ import SwiftUI
 import LocalAuthentication
 
 struct AuthenticationGateView: View {
+    @EnvironmentObject var revenueCatManager: RevenueCatManager
+    @EnvironmentObject var themeManager: ThemeManager
     @StateObject private var biometricAuthManager = BiometricAuthManager()
     @StateObject private var pinManager = PINManager()
     @AppStorage("isBiometricEnabled") private var isBiometricEnabled: Bool = false
@@ -14,19 +16,21 @@ struct AuthenticationGateView: View {
     @State private var isLocked = false
     @State private var lockTimeRemaining = 0
     @State private var hasTriedBiometric = false
-    
+
     let maxAttempts = 3
     let lockDuration = 30 // seconds
     let content: AnyView
-    
+
     init<Content: View>(@ViewBuilder content: () -> Content) {
         self.content = AnyView(content())
     }
-    
+
     var body: some View {
         Group {
             if isAuthenticated {
                 content
+                    .environmentObject(revenueCatManager)
+                    .environmentObject(themeManager)
             } else {
                 authenticationView
             }

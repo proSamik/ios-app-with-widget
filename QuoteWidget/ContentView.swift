@@ -63,6 +63,8 @@ struct ContentView: View {
         .preferredColorScheme(themeManager.currentTheme.colorScheme)
         .sheet(isPresented: $showPaywall) {
             SubscriptionPaywallView()
+                .environmentObject(revenueCatManager)
+                .environmentObject(themeManager)
         }
         .onReceive(NotificationCenter.default.publisher(for: .userDidSignOut)) { _ in
             isAuthenticated = false
