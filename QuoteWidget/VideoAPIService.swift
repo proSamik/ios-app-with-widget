@@ -87,7 +87,8 @@ class VideoAPIService: ObservableObject {
         do {
             let decoder = JSONDecoder()
             let apiVideos = try decoder.decode([Video].self, from: data)
-            return apiVideos
+            // Shuffle the videos array to prevent repetitive order
+            return apiVideos.shuffled()
         } catch {
             throw APIError.decodingError(error)
         }
